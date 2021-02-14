@@ -20,6 +20,7 @@ typedef struct _dirnode_s
 
     int showchild;
     int addchild;
+    int childnum;
     list_node dirchild;
     list_node filechild;
 }dirnode_s;

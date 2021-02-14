@@ -4,10 +4,10 @@
 #include "view.h"
 
 
-int main()
+int main(int argc,char *argv[])
 {
     pthread_t pid;
-    pthread_create(&pid,NULL,show_view,NULL);
+    pthread_create(&pid,NULL,show_view,(void*)argv);
 
 
     pthread_join(pid,NULL);

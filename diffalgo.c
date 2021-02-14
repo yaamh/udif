@@ -1,5 +1,8 @@
+#include <string.h>
+#include <stdlib.h>
 
-
+#define MAX(x,y) (x>y?x:y)
+#define MIN(x,y,z) ((x>y?y:x)>z?z:(x>y?y:x))
 
 void diff_line(const char* s1,const char* s2,char *r1,char *r2)
 {
@@ -87,7 +90,7 @@ int lcs_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
     memset(reg,0,sizeof(reg));
     for(j=1;j<=s1len;j++)
     {
-        for(j=1;j<=s1len;j++)
+        for(i=1;i<=s2len;i++)
         {
             if(eql(s1[j-1],s2[i-1]))
                 reg[j][i] = reg[j-1][i-1] + 1;
@@ -96,10 +99,10 @@ int lcs_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
         }
     }
 
-    char* r1 = malloc(s1len);
-    char* r2 = malloc(s2len);
-    memset(r1,0,s1len);
-    memset(r2,0,s2len);
+    char* t1 = malloc(s1len);
+    char* t2 = malloc(s2len);
+    memset(t1,0,s1len);
+    memset(t2,0,s2len);
 
     j = s1len;
     i = s2len;
@@ -112,7 +115,7 @@ int lcs_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
         }
         else
         {
-            if(reg[j-1][i-1] >= reg[j-1][i] && reg[j-1][i-1] >= reg[1][i-1])
+            if(reg[j-1][i-1] >= reg[j-1][i] && reg[j-1][i-1] >= reg[j][i-1])
             {
                 i--;
                 j--;
@@ -157,28 +160,30 @@ void ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
                 reg[j][i] = MIN(reg[j-1][i],reg[j][i-1],reg[j-1][i-1]) + 1;
         }
     }
-    memset(r1,0,s1len);
-    memset(r2,0,s2len);
+    char* t1 = malloc(s1len);
+    char* t2 = malloc(s2len);
+    memset(t1,0,s1len);
+    memset(t2,0,s2len);
+
     j = s1len;
     i = s2len;
-
     while(i||j)
     {
         if(i == 1 && j != 1)
         {
-            r1[--j] = 1;
+            t1[--j] = 1;
             continue;
         }
         if(i != 1 && j == 1)
         {
-            r2[--i] = 1;
+            t2[--i] = 1;
             continue;
         }
 
         if(reg[j-1][i-1] == reg[j][i])
         {
-            r1[--j] = 0;
-            r2[--i] = 0;
+            t1[--j] = 0;
+            t2[--i] = 0;
         }
         else
         {
@@ -186,7 +191,7 @@ void ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
             {
                 if(reg[j-1][i] < reg[j-1][i-1])
                 {
-                    r1[--j] = 1;
+                    t1[--j] = 1;
                     continue;
                 }
             }
@@ -194,14 +199,16 @@ void ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
             {
                 if(reg[j][i-1] < reg[j-1][i-1])
                 {
-                    r2[--i] = 1;
+                    t2[--i] = 1;
                     continue;
                 }
             }
-            r1[--j] = 2;
-            r2[--i] = 2;
+            t1[--j] = 2;
+            t2[--i] = 2;
         }
     }
+    *r1 = t1;
+    *r2 = t2;
 }
 
 

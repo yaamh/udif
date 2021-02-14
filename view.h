@@ -5,23 +5,23 @@
 
 typedef struct
 {
-    int level;
     filenode_s *file;
+    int level;
 }vfile_s;
+
+typedef struct
+{
+    list_node node;
+    vfile_s vfs[2];
+}vfilenode_s;
 
 typedef struct
 {
     WINDOW *fullwin;
     WINDOW *window;
+    dirnode_s *cwdnode;
     int x,y,w,h;
-    int spe;
     attr_t *attr_arr;
-    vfile_s *file_arr;
-    int arr_maxnum;
-    int file_maxnum;
-    int printstarty,printnumy;
-    filenode_s  *cutfile;
-    int bcpyfile;
 } win_s;
 
 
@@ -29,6 +29,12 @@ typedef struct
 {
     int winnums;
     win_s  win[2];
+    list_node file_list;
+    int filenum;
+    int printstart,printnum;
+    int lineindex;
+    int linemax;
+    int spe;
 }view_s;
 
 void* show_view(void* arg);

@@ -162,6 +162,7 @@ dirnode_s* get_filelist(dirnode_s *dir)
                 list_add_next(&dir->filechild, &pfilenode->node);
                 pfilenode->father = dir;
             }
+            dir->childnum++;
         }
         free(namelist[i]);
     }
