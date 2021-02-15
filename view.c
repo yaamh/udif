@@ -5,6 +5,7 @@
 #include <curses.h>
 #include "filelist.h"
 #include "diffalgo.h"
+#include "dirdiff.h"
 #include "view.h"
 #include "file.h"
 
@@ -36,156 +37,12 @@ void clear_view(view_s *view)
     wclear(view->win[1].window);
 }
 
-//update view
+//刷新view
 void update_view(view_s *view)
 {
     flush_attr(view);
     wrefresh(view->win[0].window);
     wrefresh(view->win[1].window);
-}
-
-int filelist_eql(vfile_s *file1,vfile_s *file2)
-{
-    filenode_s *f1 = file1->file;
-    filenode_s *f2 = file2->file;
-
-	if(f1->type != f2->type)
-		return FALSE;
-	if(!strncmp(f1->name,f2->name,sizeof(f1->name)))
-		return TRUE;
-	return FALSE;
-}
-
-//打印文件
-int arr_filelist(void *node,void *args,int level)
-{
-    int *index = ((void**)args)[0];
-    vfile_s *arr = ((void**)args)[1];
-
-    arr[*index].file = node;
-    arr[*index].level = level;
-    (*index)++;
-    return 0;
-}
-
-vfile_s* get_filearr(dirnode_s *dir)
-{
-    if(!dir)
-        return NULL;
-    int index = 0;
-    vfile_s *arr = malloc(dir->childnum*sizeof(vfile_s));
-    memset(arr,0,dir->childnum*sizeof(vfile_s));
-    
-    void *args[] = {&index,arr};
-	foreach_file(dir, arr_filelist, (void*)args, 0);
-    return arr;
-}
-
-//对比文件列表
-int diff_filelist(dirnode_s *dir1, dirnode_s *dir2, list_node* out)
-{
-    int vf1num = 0;
-    int vf2num = 0;
-	int i,j;
-	int index;
-	char *r1,*r2;
-
-    vfile_s* vf1 = get_filearr(dir1);
-    vfile_s* vf2 = get_filearr(dir2);
-    if(vf1)
-        vf1num = dir1->childnum;
-    if(vf2)
-        vf2num = dir2->childnum;
-	
-	vfile_s *f1arr[vf1num+1];
-	vfile_s *f2arr[vf2num+1];
-	
-	for(i=0;i<vf1num;i++)
-		f1arr[i] = &vf1[i];
-	f1arr[i] = NULL;
-	for(i=0;i<vf2num;i++)
-		f2arr[i] = &vf2[i];
-	f2arr[i] = NULL;
-	
-	//获取文件比较结果，相同行
-	int comlines = lcs_data((void**)f1arr,(void**)f2arr,&r1,&r2,(void*)filelist_eql);
-	int maxlines = vf1num + vf2num - comlines;
-
-    //将相同的部分挪到数组前面
-	for(i=0,index=0;i<vf1num;i++)
-	{
-		if(r1[i])
-			f1arr[index++] = &vf1[i];
-		else
-			f1arr[comlines+i-index] = &vf1[i];
-	}
-	for(i=0,index=0;i<vf2num;i++)
-	{
-		if(r2[i])
-			f2arr[index++] = &vf2[i];
-		else
-			f2arr[comlines+i-index] = &vf2[i];
-	}
-    
-    //将结果转换为链表
-    vfilenode_s *node;
-    list_init(out);
-	for(i=0;i<comlines;i++)
-    {
-        node = malloc(sizeof(vfilenode_s)); 
-        memset(node,0,sizeof(vfilenode_s));
-        node->vfs[0] = *f1arr[i];
-        node->vfs[1] = *f2arr[i];
-        list_add_prev(out, &node->node);
-    }
-
-	for(i=comlines;i<vf1num;i++)
-    {
-        node = malloc(sizeof(vfilenode_s)); 
-        memset(node,0,sizeof(vfilenode_s));
-        node->vfs[0] = *f1arr[i];
-        node->vfs[1].file = NULL;
-        list_add_prev(out, &node->node);
-    }
-
-	for(i=comlines;i<vf2num;i++)
-    {
-        node = malloc(sizeof(vfilenode_s)); 
-        memset(node,0,sizeof(vfilenode_s));
-        node->vfs[1] = *f2arr[i];
-        node->vfs[0].file = NULL;
-        list_add_prev(out, &node->node);
-    }
-
-	free(r1);
-	free(r2);
-    free(vf1);
-    free(vf2);
-    return maxlines;
-}
-
-//递归遍历链表
-void recurs_dirlist(list_node *list,int (*func)(vfilenode_s*,void*,int),void *arg)
-{
-    static int level = 0;
-    vfilenode_s *vfn;
-    list_node *pos;
-
-    level++;
-    list_foreach(pos,list) 
-    {
-        vfn = list_entry(pos, vfilenode_s, node);
-        if(func(vfn,arg,level))
-        {
-            level--;
-            return;
-        }
-        if(vfn->showchild)
-        {
-            recurs_dirlist(&vfn->childnode,func,arg);
-        }
-    }
-    level--;
 }
 
 int print_func(vfilenode_s* vfn,void* arg,int level)
@@ -223,7 +80,7 @@ void print_dirlist(view_s *view)
 {
     int lines = 0;
     void *args[] = {&lines,view};
-    recurs_dirlist(&view->file_list,print_func,(void*)args);
+    recurs_filelist(&view->file_list,print_func,(void*)args);
 }
 
 
@@ -319,36 +176,12 @@ void move_line(view_s *view,int type)
     }
 }
 
-int seek_func(vfilenode_s *vfn,void *arg,int level)
-{
-    vfilenode_s **retvfn = ((void**)arg)[0];
-    int *index = ((void**)arg)[1];
-    int *seek = ((void**)arg)[2];
-
-    if((*index)++ == *seek)
-    {
-        *retvfn = vfn;
-        return 1;
-    }
-    return 0;
-}
-
-vfilenode_s* seek_file(view_s *view)
-{
-    vfilenode_s *vfn;
-    int index = 0;
-    int seek = view->lineindex + view->printstart;
-    void *args[] = {&vfn,&index,&seek};
-    recurs_dirlist(&view->file_list,seek_func,(void*)args);
-    return vfn;
-}
-
 //张开目录
 void toggle_dir(view_s *view)
 {
     vfilenode_s *vfn;
 
-    vfn = seek_file(view);
+    vfn = seek_file(view->lineindex + view->printstart,&view->file_list);
     dirnode_s* pdir[view->winnums];
     filenode_s *file;
     int i;
