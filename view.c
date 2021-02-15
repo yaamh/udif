@@ -4,9 +4,11 @@
 #include <string.h>
 #include <curses.h>
 #include "filelist.h"
+#include "diffalgo.h"
 #include "view.h"
 #include "file.h"
 
+#define PRINTNUM ({int t=view->filenum - view->printstart;t>view->linemax?view->linemax:t;})
 //刷新属性
 void flush_attr(view_s *view)
 {
@@ -106,7 +108,7 @@ int diff_filelist(dirnode_s *dir1, dirnode_s *dir2, list_node* out)
 	f2arr[i] = NULL;
 	
 	//获取文件比较结果，相同行
-	int comlines = lcs_data(f1arr,f2arr,&r1,&r2,(void*)filelist_eql);
+	int comlines = lcs_data((void**)f1arr,(void**)f2arr,&r1,&r2,(void*)filelist_eql);
 	int maxlines = vf1num + vf2num - comlines;
 
     //将相同的部分挪到数组前面
@@ -198,7 +200,7 @@ int print_func(vfilenode_s* vfn,void* arg,int level)
         (*lines)++;
         return 0;
     }
-    if(*lines > view->printstart + view->printnum)
+    if(*lines > view->printstart + PRINTNUM)
         return 1;
 
     for(i=0;i<view->winnums;i++)
@@ -280,28 +282,17 @@ void init_view(view_s *view, char *argv[])
     update_view(view);
 }
 
-//移动选中窗口
-#if 0
-void move_win(view_s *view,int type)
-{
-    view->curwin++;
-    if(view->curwin == &view->win[view->winnums])
-        view->curwin = &view->win[0];
-
-}
-#endif
-
 //移动光标
 void move_line(view_s *view,int type)
 {
     if(type == 'j')
     {
-        if(view->lineindex + 1 < view->printnum)
+        if(view->lineindex + 1 < PRINTNUM)
             //当光标未达到最下方文件，则光标下移
             view->lineindex++;
         else
         {
-            if(view->printstart + view->printnum < view->filenum)
+            if(view->printstart + PRINTNUM < view->filenum)
             {
                 //当光标达到最下方，但下方还有文件时，文件上移                
                 view->printstart++;
@@ -355,9 +346,7 @@ vfilenode_s* seek_file(view_s *view)
 //张开目录
 void toggle_dir(view_s *view)
 {
-    list_node *pos;
     vfilenode_s *vfn;
-    int index = 0;
 
     vfn = seek_file(view);
     dirnode_s* pdir[view->winnums];
@@ -367,17 +356,24 @@ void toggle_dir(view_s *view)
     for(i=0;i<view->winnums;i++)
     {
         file = vfn->vfs[i].file;
-        if(file && file->type != DT_DIR)
-            return;
-        if(file && file->type == DT_DIR)
+        if(!file)
         {
+            pdir[i] = NULL;
+            continue;
+        }
+        if(file->type == DT_DIR)
+        {
+            //目录
             pdir[i] = (dirnode_s*)file;
             get_filelist(pdir[i]);
-            vfn->showchild = !vfn->showchild;
         }
         else
-            pdir[i] = NULL;
+        {
+            //文件
+            return;
+        }
     }
+    vfn->showchild = !vfn->showchild;
     if(!vfn->addchild)
     {
         int filenum = diff_filelist(pdir[0], pdir[1], &vfn->childnode);
@@ -392,135 +388,6 @@ void toggle_dir(view_s *view)
     clear_view(view);
     print_dirlist(view);
 }
-
-//折叠父目录
-#if 0
-void fold_dir(win_s *win)
-{
-    filenode_s *file;
-    
-    if(win->y < win->printnum)
-    {
-        file = win->file_arr[win->printstart + win->y].file;
-        if(!file->father->file.father)
-            return;
-        ((dirnode_s*)file->father)->showchild = 0;
-        win->y = index_file(win,(filenode_s*)file->father);
-        if(win->y < 0)
-        {
-            win->printstart += win->y;
-            win->y = 0;
-        }
-        clear_win(win);
-        print_dirlist(win);
-    }
-}
-#endif
-
-//黏贴文件
-#if 0
-void past_file(win_s *win)
-{
-    filenode_s *pfile;
-    dirnode_s *fatherdir;
-
-    if(!win->cutfile)
-        return;
-
-    if(win->y < win->printnum)
-    {
-        pfile = win->file_arr[win->printstart + win->y].file;
-        if(pfile->type == DT_DIR)
-        {
-            if(((dirnode_s*)pfile)->showchild)
-                fatherdir = (dirnode_s*)pfile;
-            else
-                fatherdir = pfile->father;
-        }
-        else
-            fatherdir = pfile->father;
-
-        if(win->cutfile->type == DT_DIR)
-        {
-            //目录拷贝要满足2个条件，1.负责文件不能本来就在目标文件夹下 2.复制文件不能是目标文件本身或直系父目录
-            if(win->cutfile->father == fatherdir)
-                    return;
-
-            dirnode_s *pdir = fatherdir;
-            while(pdir)
-            {
-                if(pdir == (dirnode_s*)win->cutfile)
-                    return;
-                pdir = pdir->file.father;
-            }
-        }
-        else
-        {
-            //文件复制需满足1个条件，文件不能本身在目标文件夹下
-            pfile = win->cutfile;
-            if(pfile->father == fatherdir)
-                return;
-        }
-
-        //检测文件复制是否成功
-        if(insert_checkfile(fatherdir,win->cutfile))
-            return;
-        if(win->bcpyfile)
-        {
-            //复制文件
-            copy_file(win->cutfile, fatherdir);
-            insert_filenode(fatherdir, win->cutfile,TRUE);
-        }
-        else
-        {
-            if(move_file(win->cutfile, fatherdir))
-                return;
-            delete_file(win->cutfile);
-            insert_file(fatherdir, win->cutfile,FALSE);
-        }
-    }
-    win->cutfile = NULL;
-    clear_win(win);
-    print_dirlist(win);
-}
-#endif
-
-//剪切文件
-#if 0
-void cut_file(win_s*win)
-{
-    if(win->y < win->printnum)
-        win->cutfile = win->file_arr[win->printstart + win->y].file;
-}
-#endif
-
-//复制文件
-#if 0
-void cpy_file(win_s *win)
-{
-    if(win->y < win->printnum)
-    {
-        win->cutfile = win->file_arr[win->printstart + win->y].file;
-        win->bcpyfile = 1;
-    }
-}
-#endif
-
-//删除文件
-#if 0
-void del_file(win_s*win)
-{
-    filenode_s *file;
-    if(win->y < win->printnum)
-    {
-        file = win->file_arr[win->printstart + win->y].file;
-        delete_file(file);
-        delete_filenode(file);
-        clear_win(win);
-        print_dirlist(win,cwdnode);
-    }
-}
-#endif
 
 //显示界面
 void* show_view(void * arg)
@@ -551,32 +418,8 @@ void* show_view(void * arg)
             case 'k':
                 move_line(&view,ch);
                 break;
-            case 'h':
-            case 'l':
-                //move_win(&view,ch);
-                break;
             case '\n':
                 toggle_dir(&view);
-                break;
-            case 'x':
-                //fold_dir(view.curwin);
-                break;
-            case 'd':
-                //if('d' == getch())
-                    //cut_file(view.curwin);
-                break;
-            case 'y':
-                //if('y' == getch())
-                    //cpy_file(view.curwin);
-                break;
-            case 'D':
-                //del_file(view.curwin);
-                break;
-            case 'p':
-                //past_file(view.curwin);
-                break;
-            case 0x1b:  //撤销复制
-                //view.curwin->cutfile = NULL;
                 break;
         }
         flush_attr(&view);
