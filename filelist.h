@@ -35,7 +35,7 @@ enum
 dirnode_s* create_rootnode(const char* path);
 void destroy_filelist(dirnode_s *file);
 dirnode_s* get_filelist(dirnode_s *dir);
-int foreach_file(dirnode_s *dirnode,int (*filter)(void*,void*,int),void*arg);
+int foreach_file(dirnode_s *dirnode,int (*filter)(void*,void*,int),void*arg,int recurs);
 void* delete_filenode(filenode_s *node);
 void insert_filenode(dirnode_s *dirnode,filenode_s *node,int bcpy);
 int insert_checkfile(dirnode_s *dirnode,filenode_s *node);

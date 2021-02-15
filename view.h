@@ -13,6 +13,10 @@ typedef struct
 {
     list_node node;
     vfile_s vfs[2];
+    list_node childnode;
+    int showchild;
+    int addchild;
+    int childnum;
 }vfilenode_s;
 
 typedef struct

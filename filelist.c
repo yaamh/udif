@@ -173,26 +173,23 @@ dirnode_s* get_filelist(dirnode_s *dir)
 }
 
 //遍历目录节点
-int foreach_file(dirnode_s* dirnode,int (*filter)(void*,void*,int),void*arg)
+int foreach_file(dirnode_s* dirnode,int (*filter)(void*,void*,int),void*arg,int recurs)
 {
     static int level = 0;
     list_node *pos;
     filenode_s *file;
     dirnode_s  *dir;
 
-    if(!dirnode->showchild)
-        return 0;
-
     level++;
-
     list_foreach_resv(pos, &dirnode->dirchild)
     {
         dir = (dirnode_s*)list_entry(pos,filenode_s,node);
         if(filter)
             if(filter(dir,arg,level))
                 goto OUT;
-        if(foreach_file(dir,filter,arg))
-            goto OUT;
+        if(recurs)
+            if(foreach_file(dir,filter,arg,recurs))
+                goto OUT;
     }
 
     list_foreach_resv(pos, &dirnode->filechild)
