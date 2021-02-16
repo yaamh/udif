@@ -33,7 +33,7 @@ int move_file(filenode_s *file,dirnode_s *target)
 int copy_file(filenode_s *file,dirnode_s *target)
 {
     char dirname[1024];
-    char cmd[1024];
+    char cmd[2048];
     const char *filename;
     
     strncpy(dirname,get_path(&target->file),sizeof(dirname));
@@ -52,9 +52,14 @@ int dump_file(const char *filepath,void **data)
     char *filedata;
     int fd = open(filepath, O_RDONLY);
     if(fd<0)
-        return -1;
+        return 0;
     
     filelen = lseek(fd, 0, SEEK_END);
+    if(!filelen)  //空文件直接返回
+    {
+        close(fd);
+        return 0;
+    }
     filedata = malloc(filelen + 1); //这里多1字节方便后续处理
     
     lseek(fd, 0, SEEK_SET);
@@ -62,6 +67,7 @@ int dump_file(const char *filepath,void **data)
     filedata[filelen] = 0;
     
     *data = filedata;
+    close(fd);
     return filelen;
 }
 
@@ -71,16 +77,23 @@ int split_file(char *data,int len,void ***outarr)
     int linenum;
     void **line;
     char *p;
+
+    if(!len)
+    {
+        *outarr = NULL;
+        return 0;
+    }
     
     //这里考虑极限情况，每一行都是空行
-    line = malloc(sizeof(void*)*len);
+    line = malloc(sizeof(void*)*(len+1));
+    memset(line,0,sizeof(void*)*(len+1));
     
     //将文件'\n'分割
     linenum = 0;
     p = data;
     while(1)
     {
-        line[linenum++] = p;
+        line[linenum] = p;
         p = memchr(p,'\n',data + len - p);
         if(p)
         {
@@ -93,6 +106,7 @@ int split_file(char *data,int len,void ***outarr)
             ((char*)data)[len] = 0;
             break;
         }
+        linenum++;
     }
     
     *outarr = line;

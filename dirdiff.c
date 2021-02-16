@@ -2,11 +2,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <curses.h>
 #include "filelist.h"
 #include "diffalgo.h"
 #include "dirdiff.h"
-#include "view.h"
 #include "file.h"
 
 //比较2个文件是否一样
@@ -16,10 +14,10 @@ int file_eql(vfile_s *file1,vfile_s *file2)
     filenode_s *f2 = file2->file;
 
 	if(f1->type != f2->type)
-		return FALSE;
+		return 0;
 	if(!strncmp(f1->name,f2->name,sizeof(f1->name)))
-		return TRUE;
-	return FALSE;
+		return 1;
+	return 0;
 }
 
 //将文件链表转换为数组

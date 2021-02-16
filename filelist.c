@@ -119,12 +119,12 @@ char* get_path(filenode_s *file)
     while(--i)
     {
         strncat(path,cpath[i],sizeof(path));
-        strncat(path,"/",sizeof(path));
+        strncat(path,"/",sizeof(path)-1);
     }
 
     strncat(path,cpath[i],sizeof(path));
     if(file->type == FT_DIR)
-        strncat(path,"/",sizeof(path));
+        strncat(path,"/",sizeof(path)-1);
 
     return path;
 }

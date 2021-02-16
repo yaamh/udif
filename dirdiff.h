@@ -1,7 +1,8 @@
 #ifndef __DIRDIFF_H__
 #define __DIRDIFF_H__
 
-#include <curses.h>
+#include "filelist.h"
+#include "filediff.h"
 
 typedef struct
 {
@@ -13,7 +14,11 @@ typedef struct
 {
     list_node node;
     vfile_s vfs[2];
-    list_node childnode;
+    union
+    {
+        list_node childnode;
+        vlinesnode_s lines;
+    };
     int showchild;
     int addchild;
     int childnum;
