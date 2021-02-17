@@ -10,6 +10,7 @@ typedef struct
     int level;
 }vfile_s;
 
+struct _vlinesnodes;
 typedef struct
 {
     list_node node;

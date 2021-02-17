@@ -61,6 +61,7 @@ typedef struct
 void* show_view(void* arg);
 void clear_view(viewbase_s *view);
 void print_dirlist(dirview_s *view);
+void print_linearr(fileview_s *view,vfilenode_s *vfn);
 
 #define SPE 2
 

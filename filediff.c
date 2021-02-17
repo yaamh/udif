@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "diffalgo.h"
 #include "dirdiff.h"
+#include "filediff.h"
 #include "file.h"
 
 
@@ -47,10 +48,8 @@ int filediff(vfilenode_s *vfn)
     memset(vln,0,linelen*sizeof(vlinenode_s));
     int *diffvln = malloc(diffnum*sizeof(int));
     memset(diffvln,0,diffnum*sizeof(int));
-    vfn->lines.diffnum = diffnum;
-    vfn->lines.diffpoint = diffvln;
-    int r1index,r2index;
-    for(i=0,r1index=0,r2index=0;i<linelen;i++)
+    int r1index,r2index,diffindex;
+    for(i=0,r1index=0,r2index=0,diffindex=0;i<linelen;i++)
     {
         while(r1index < lines[0] && r1[r1index] == 1)
         {
@@ -58,8 +57,7 @@ int filediff(vfilenode_s *vfn)
             vln[i].left = linearr[0][r1index++];
             vln[i].right = NULL;
             vln[i].difftype = 1;
-            i++;
-            *diffvln++=i;
+            diffvln[diffindex++]=i++;
         }
         while(r2index < lines[1] && r2[r2index] == 1)
         {
@@ -67,20 +65,24 @@ int filediff(vfilenode_s *vfn)
             vln[i].left = linearr[1][r2index++];
             vln[i].right = NULL;
             vln[i].difftype = 1;
-            i++;
-            *diffvln++=i;
+            diffvln[diffindex++]=i++;
         }
         if(r1index < lines[0] && r2index < lines[1] && r1[r1index] == r2[r2index])
         {
             vln[i].difftype = r1[r1index];
             if(r1[r1index] == 2)
+            {
                 //比对行有差异
-                *diffvln++=i;
+                diffvln[diffindex++]=i;
+            }
             vln[i].left = linearr[0][r1index++];
             vln[i].right = linearr[1][r2index++];
         }
     }
     vfn->lines.line = vln;
+    //差异合并
+    vfn->lines.diffnum = diffnum;
+    vfn->lines.diffpoint = diffvln;
 
     if(r1)
         free(r1);

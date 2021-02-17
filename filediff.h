@@ -1,7 +1,7 @@
 #ifndef __FILEDIFF_H__
 #define __FILEDIFF_H__
 
-#include "dirdiff.h"
+#include "filediff.h"
 
 typedef struct
 {
@@ -10,7 +10,7 @@ typedef struct
     int difftype;
 }vlinenode_s;
 
-typedef struct
+typedef struct 
 {
     vlinenode_s *line;
     int *diffpoint;//差异索引数组

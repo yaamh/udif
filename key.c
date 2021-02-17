@@ -115,7 +115,8 @@ void toggle_dir(view_s *view)
         update_panels();
         if(!vfn->lines.line)
         {
-            vfn->childnum = filediff(vfn, &vfn->lines.line);
+            int filediff(vfilenode_s *vfn);
+            vfn->childnum = filediff(vfn);
         }
         view->fileview.vfn = vfn;
         view->fileview.base.viewmax = vfn->childnum;
@@ -127,10 +128,55 @@ void toggle_dir(view_s *view)
     }
 }
 
+void tab_diff(fileview_s *view,int type)
+{
+    int i;
+    vfilenode_s *vfn = view->vfn;
+    viewbase_s *base = &view->base;
+    base->lineindex = 10;
+    int lineindex = base->printstart + base->lineindex;
+    int *diffpoint = vfn->lines.diffpoint;
+    int diffnum = vfn->lines.diffnum;
 
+    if(type == 'n')
+    {
+        for(i=0;i<diffnum;i++)
+        {
+            if(diffpoint[i] > lineindex)
+            {
+                //找到下一个差一点
+                base->printstart = diffpoint[i] - base->lineindex;
+                break;
+            }
+        }
 
+    }
+    else if(type == 'p')
+    {
+        for(i=diffnum-1;i>=0;i--)
+        {
+            if(diffpoint[i] < lineindex)
+            {
+                //找到上一个差一点
+                if(diffpoint[i] > base->lineindex)
+                    base->printstart = diffpoint[i] - base->lineindex;
+                else
+                {
+                    base->lineindex = diffpoint[i];
+                    base->printstart = 0;
+                }
+                break;
+            }
+        }
+    }
+    clear_view(base);
+    print_linearr(view,vfn);
+}
 
+void move_char(fileview_s *view,int type)
+{
 
+}
 
 
 

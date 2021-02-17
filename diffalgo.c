@@ -11,7 +11,7 @@ void diff_line(const char* s1,const char* s2,char *r1,char *r2)
     int s2len = strlen(s2);
     int i,j;
 
-    char reg[s1len + 1][s2len + 1];
+    int reg[s1len + 1][s2len + 1];
 
     for(i=0;i<=s2len;i++)
         reg[0][i] = i;
@@ -87,7 +87,7 @@ int lcs_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
     while(s2[i++])
         s2len++;
 
-    char reg[s1len + 1][s2len + 1];
+    int reg[s1len + 1][s2len + 1];
     memset(reg,0,sizeof(reg));
     for(j=1;j<=s1len;j++)
     {
@@ -179,7 +179,7 @@ int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*),int 
             return 0;
     }
 
-    char reg[s1len + 1][s2len + 1];
+    int reg[s1len + 1][s2len + 1];
 
     for(i=0;i<=s2len;i++)
         reg[0][i] = i;
@@ -246,6 +246,7 @@ int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*),int 
     return len;
 }
 
+#if 0
 int test_line_eql(void*s1,void*s2)
 {
     if(!strcoll(s1, s2))
@@ -254,17 +255,10 @@ int test_line_eql(void*s1,void*s2)
         return 0;
 }
 
-#if 0
 #define C0 "\x1b[0m"
 #define C1 "\x1b[31m"
 #define C2 "\x1b[31m"
 #define C3 "\x1b[31m"
-#else
-#define C0 
-#define C1
-#define C2
-#define C3
-#endif
 
 void test_file(char *file[])
 {
@@ -280,7 +274,6 @@ void test_file(char *file[])
     }
     int diffnum;
     int linelen = ld_data((void**)(linearr[0]),(void**)(linearr[1]),&r1,&r2,test_line_eql,&diffnum);
-#if 1 
     for(i=0;i<lines[0];i++)
     {
         if(r1[i] == 0)
@@ -300,8 +293,8 @@ void test_file(char *file[])
         else if(r2[i] == 2)
             printf(C3"%s================\n"C0,linearr[1][i]);
     }
-#endif
 }
+#endif
 
 
 

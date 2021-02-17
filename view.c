@@ -5,9 +5,10 @@
 #include <string.h>
 #include <curses.h>
 #include <panel.h>
-#include "filelist.h"
 #include "diffalgo.h"
+#include "filediff.h"
 #include "dirdiff.h"
+#include "filelist.h"
 #include "view.h"
 #include "file.h"
 #include "key.h"
@@ -125,9 +126,9 @@ void print_linearr(fileview_s *view,vfilenode_s *vfn)
                 break;
         }
         if(lines->line[i].left)
-            mvwprintw(view->base.win[0].window,index,0,"%s",lines->line[i].left);
+            mvwprintw(view->base.win[0].window,index,0,"%-4d %s",i,lines->line[i].left);
         if(lines->line[i].right)
-            mvwprintw(view->base.win[1].window,index,0,"%s",lines->line[i].right);
+            mvwprintw(view->base.win[1].window,index,0,"%-4d %s",i,lines->line[i].right);
         index++;
     }
 }
@@ -256,6 +257,14 @@ void* show_view(void * arg)
                 case 'j':
                 case 'k':
                     move_line(&view,ch);
+                    break;
+                case 'h':
+                case 'l':
+                    move_char(&view.fileview,ch);
+                    break;
+                case 'n':
+                case 'p':
+                    tab_diff(&view.fileview,ch);
                     break;
                 case '\n':
                     break;
