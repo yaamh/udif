@@ -222,7 +222,7 @@ int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
             continue;
         }
 
-        if(reg[j-1][i-1] == reg[j][i])
+        if(eql(s1[j-1],s2[i-1]))
         {
             t1[--j] = 0;
             t2[--i] = 0;
