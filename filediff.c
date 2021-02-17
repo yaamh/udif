@@ -74,6 +74,9 @@ int filediff(vfilenode_s *vfn)
             {
                 //比对行有差异
                 diffvln[diffindex++]=i;
+                vln[i].r1 = malloc(strlen(linearr[0][r1index]));
+                vln[i].r2 = malloc(strlen(linearr[1][r2index]));
+                diff_line(linearr[0][r1index],linearr[1][r2index],vln[i].r1,vln[i].r2);
             }
             vln[i].left = linearr[0][r1index++];
             vln[i].right = linearr[1][r2index++];

@@ -15,7 +15,7 @@ void diff_line(const char* s1,const char* s2,char *r1,char *r2)
 
     for(i=0;i<=s2len;i++)
         reg[0][i] = i;
-    for(j=0;j<=s1len;i++)
+    for(j=0;j<=s1len;j++)
         reg[j][0] = j;
     for(j=1;j<=s1len;j++)
     {
@@ -45,7 +45,7 @@ void diff_line(const char* s1,const char* s2,char *r1,char *r2)
             continue;
         }
 
-        if(reg[j-1][i-1] == reg[j][i])
+        if(s1[j-1] == s2[i-1])
         {
             r1[--j] = 0;
             r2[--i] = 0;

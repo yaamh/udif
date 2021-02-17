@@ -8,6 +8,8 @@ typedef struct
     char* left;
     char* right;
     int difftype;
+    char* r1;
+    char* r2;
 }vlinenode_s;
 
 typedef struct 

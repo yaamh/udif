@@ -24,13 +24,21 @@ void flush_attr(viewbase_s *view)
     for(i=0;i<view->winnums;i++)
     {
         win = &view->win[i];
+        lineattr_s (*attr_arr)[win->h][win->w] = (void*)win->attr_arr; 
         for(j=0;j<view->linemax;j++)
         {
-            attr = win->attr_arr[j].attr;
-            pair = win->attr_arr[j].pair;
+            attr = (*attr_arr)[j][0].attr;
+            pair = (*attr_arr)[j][0].pair;
             if(view->lineindex == j)
                 attr |= A_UNDERLINE;
-            mvwchgat(win->window, j, win->x, win->w, attr, pair, NULL);
+            if(pair == 2) //行差异
+            {
+                int n;
+                for(n=0;n<win->w;n++)
+                    mvwchgat(win->window, j, n+5, 1, attr, (*attr_arr)[j][n].pair, NULL);
+            }
+            else
+                mvwchgat(win->window, j, win->x, win->w, attr, pair, NULL);
         }
     }
 }
@@ -101,9 +109,11 @@ void print_dirlist(dirview_s *view)
 //打印文件
 void print_linearr(fileview_s *view,vfilenode_s *vfn)
 {
-    int i,index=0;
+    int i,j,index=0;
     vlinesnode_s *lines = &vfn->lines;
     viewbase_s *base = &view->base;
+    lineattr_s (*attr_arr1)[base->win[0].h][base->win[0].w] = (void*)base->win[0].attr_arr; 
+    lineattr_s (*attr_arr2)[base->win[1].h][base->win[1].w] = (void*)base->win[1].attr_arr; 
     for(i=0;i<vfn->childnum;i++)
     {
         if(i<base->printstart)
@@ -113,16 +123,17 @@ void print_linearr(fileview_s *view,vfilenode_s *vfn)
         switch(lines->line[i].difftype)
         {
             case 0:
-                base->win[0].attr_arr[index].pair = 0;
-                base->win[1].attr_arr[index].pair = 0;
-                break;
             case 1:
-                base->win[0].attr_arr[index].pair = 1;
-                base->win[1].attr_arr[index].pair = 1;
+                (*attr_arr1)[index][0].pair = lines->line[i].difftype;
+                (*attr_arr2)[index][0].pair = lines->line[i].difftype;
                 break;
             case 2:
-                base->win[0].attr_arr[index].pair = 2;
-                base->win[1].attr_arr[index].pair = 2;
+                for(j=0;j<strlen(lines->line[i].left);j++)
+                    (*attr_arr1)[index][j].pair = lines->line[i].r1[j];
+                (*attr_arr1)[index][0].pair = 2; //这一步主要是后续属性判断时可以区分行差异
+                for(j=0;j<strlen(lines->line[i].right);j++)
+                    (*attr_arr2)[index][j].pair = lines->line[i].r2[j];
+                (*attr_arr2)[index][0].pair = 2;
                 break;
         }
         if(lines->line[i].left)
@@ -142,8 +153,8 @@ void init_win(WINDOW *father,win_s *win, int h, int w, int y, int x)
             h - 2, w - 2, 1, 1);
     getmaxyx(win->window, win->h, win->w);
     win->y = win->x = 0;
-    win->attr_arr = malloc(sizeof(lineattr_s)*win->h);
-    memset(win->attr_arr,0,sizeof(lineattr_s)*win->h);
+    win->attr_arr = malloc(sizeof(lineattr_s)*win->h*win->w);
+    memset(win->attr_arr,0,sizeof(lineattr_s)*win->h*win->w);
     keypad(win->fullwin,TRUE);
     keypad(win->window,TRUE);
     box(win->fullwin,0,0);

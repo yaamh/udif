@@ -7,7 +7,7 @@
 
 typedef struct
 {
-    short pair;
+    short  pair;
     attr_t attr;
 }lineattr_s;
 
@@ -17,7 +17,7 @@ typedef struct
     WINDOW *window;
     dirnode_s *cwdnode;
     int x,y,w,h;
-    lineattr_s *attr_arr;
+    lineattr_s **attr_arr; //二维数组标记字符颜色和属性
 }win_s;
 
 typedef struct
