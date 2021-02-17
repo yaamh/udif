@@ -193,6 +193,18 @@ int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
         }
     }
 
+#if 0
+    for(j=0;j<=s1len;j++)
+    {
+        for(i=0;i<=s2len;i++)
+        {
+            printf("%d ",reg[j][i]);
+        }
+        printf("\n");
+    }
+#endif
+
+
     int len = 0;
     j = s1len;
     i = s2len;
@@ -275,6 +287,7 @@ void test_file(char *file[])
         lines[i] = split_file(data[i],filelen,(void***)&linearr[i]);
     }
     int linelen = ld_data((void**)(linearr[0]),(void**)(linearr[1]),&r1,&r2,test_line_eql);
+#if 1 
     for(i=0;i<lines[0];i++)
     {
         if(r1[i] == 0)
@@ -294,6 +307,7 @@ void test_file(char *file[])
         else if(r2[i] == 2)
             printf(C3"%s================\n"C0,linearr[1][i]);
     }
+#endif
 }
 
 
