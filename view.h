@@ -7,11 +7,17 @@
 
 typedef struct
 {
+    short pair;
+    attr_t attr;
+}lineattr_s;
+
+typedef struct
+{
     WINDOW *fullwin;
     WINDOW *window;
     dirnode_s *cwdnode;
     int x,y,w,h;
-    attr_t *attr_arr;
+    lineattr_s *attr_arr;
 }win_s;
 
 typedef struct

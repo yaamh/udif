@@ -17,6 +17,7 @@ void flush_attr(viewbase_s *view)
 {
     int i,j;
     attr_t attr;
+    short pair;
     win_s *win;
 
     for(i=0;i<view->winnums;i++)
@@ -24,10 +25,11 @@ void flush_attr(viewbase_s *view)
         win = &view->win[i];
         for(j=0;j<view->linemax;j++)
         {
-            attr=win->attr_arr[j];
+            attr = win->attr_arr[j].attr;
+            pair = win->attr_arr[j].pair;
             if(view->lineindex == j)
                 attr |= A_UNDERLINE;
-            mvwchgat(win->window, j, win->x, win->w, attr, 0, NULL);
+            mvwchgat(win->window, j, win->x, win->w, attr, pair, NULL);
         }
     }
 }
@@ -107,6 +109,21 @@ void print_linearr(fileview_s *view,vfilenode_s *vfn)
             continue;
         if(index>base->linemax)
             break;
+        switch(lines->line[i].difftype)
+        {
+            case 0:
+                base->win[0].attr_arr[index].pair = 0;
+                base->win[1].attr_arr[index].pair = 0;
+                break;
+            case 1:
+                base->win[0].attr_arr[index].pair = 1;
+                base->win[1].attr_arr[index].pair = 1;
+                break;
+            case 2:
+                base->win[0].attr_arr[index].pair = 2;
+                base->win[1].attr_arr[index].pair = 2;
+                break;
+        }
         if(lines->line[i].left)
             mvwprintw(view->base.win[0].window,index,0,"%s",lines->line[i].left);
         if(lines->line[i].right)
@@ -124,8 +141,8 @@ void init_win(WINDOW *father,win_s *win, int h, int w, int y, int x)
             h - 2, w - 2, 1, 1);
     getmaxyx(win->window, win->h, win->w);
     win->y = win->x = 0;
-    win->attr_arr = malloc(sizeof(attr_t)*win->h);
-    memset(win->attr_arr,0,sizeof(attr_t)*win->h);
+    win->attr_arr = malloc(sizeof(lineattr_s)*win->h);
+    memset(win->attr_arr,0,sizeof(lineattr_s)*win->h);
     keypad(win->fullwin,TRUE);
     keypad(win->window,TRUE);
     box(win->fullwin,0,0);
@@ -195,7 +212,11 @@ void* show_view(void * arg)
 
     setlocale(LC_ALL,"");
     initscr();
+    if(has_colors() == FALSE)
+        return NULL;
     start_color();
+    init_pair(1,COLOR_RED,COLOR_BLACK);
+    init_pair(2,COLOR_YELLOW,COLOR_BLACK);
     noecho();
     cbreak();
     curs_set(FALSE);

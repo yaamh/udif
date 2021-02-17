@@ -132,12 +132,13 @@ int lcs_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
     return reg[s1len][s2len];
 }
 
-//比较2个数据，获取差异，s1,s2以NULL结尾
-int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
+//比较2个数据，获取差异，s1,s2以NULL结尾,返回2个文件去重后长度
+int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*),int *diffnum)
 {
     int i,j;
     int s1len,s2len;
     char *t1,*t2;
+    *diffnum = 0;
 
     i = 0;s1len=0;
     if(s1)
@@ -163,6 +164,7 @@ int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
             memset(t1,1,s1len);
             *r1 = t1;
             *r2 = NULL;
+            *diffnum = s1len;
             return s1len;
         }
         if(s2)
@@ -170,6 +172,7 @@ int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
             memset(t2,1,s2len);
             *r2 = t2;
             *r1 = NULL;
+            *diffnum = s2len;
             return s2len;
         }
         if(!s1 && !s2)
@@ -192,18 +195,6 @@ int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
                 reg[j][i] = MIN(reg[j-1][i],reg[j][i-1],reg[j-1][i-1]) + 1;
         }
     }
-
-#if 0
-    for(j=0;j<=s1len;j++)
-    {
-        for(i=0;i<=s2len;i++)
-        {
-            printf("%d ",reg[j][i]);
-        }
-        printf("\n");
-    }
-#endif
-
 
     int len = 0;
     j = s1len;
@@ -229,6 +220,7 @@ int ld_data(void **s1,void **s2,char **r1,char **r2,int (*eql)(void*,void*))
         }
         else
         {
+            (*diffnum)++;
             if(reg[j-1][i] <= reg[j][i-1])
             {
                 if(reg[j-1][i] < reg[j-1][i-1])
@@ -286,7 +278,8 @@ void test_file(char *file[])
         int filelen = dump_file(file[i],(void**)&data[i]);
         lines[i] = split_file(data[i],filelen,(void***)&linearr[i]);
     }
-    int linelen = ld_data((void**)(linearr[0]),(void**)(linearr[1]),&r1,&r2,test_line_eql);
+    int diffnum;
+    int linelen = ld_data((void**)(linearr[0]),(void**)(linearr[1]),&r1,&r2,test_line_eql,&diffnum);
 #if 1 
     for(i=0;i<lines[0];i++)
     {
