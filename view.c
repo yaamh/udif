@@ -35,7 +35,7 @@ void flush_attr(viewbase_s *view)
             {
                 int n;
                 for(n=0;n<win->w;n++)
-                    mvwchgat(win->window, j, n+5, 1, attr, (*attr_arr)[j][n].pair, NULL);
+                    mvwchgat(win->window, j, n, 1, attr, (*attr_arr)[j][n].pair, NULL);
             }
             else
                 mvwchgat(win->window, j, win->x, win->w, attr, pair, NULL);
@@ -110,10 +110,11 @@ void print_dirlist(dirview_s *view)
 void print_linearr(fileview_s *view,vfilenode_s *vfn)
 {
     int i,j,index=0;
+    int linelen;
     vlinesnode_s *lines = &vfn->lines;
     viewbase_s *base = &view->base;
-    lineattr_s (*attr_arr1)[base->win[0].h][base->win[0].w] = (void*)base->win[0].attr_arr; 
-    lineattr_s (*attr_arr2)[base->win[1].h][base->win[1].w] = (void*)base->win[1].attr_arr; 
+    lineattr_s (*attr_arr1)[base->win[0].w] = (void*)base->win[0].attr_arr; 
+    lineattr_s (*attr_arr2)[base->win[1].w] = (void*)base->win[1].attr_arr; 
     for(i=0;i<vfn->childnum;i++)
     {
         if(i<base->printstart)
@@ -124,22 +125,31 @@ void print_linearr(fileview_s *view,vfilenode_s *vfn)
         {
             case 0:
             case 1:
-                (*attr_arr1)[index][0].pair = lines->line[i].difftype;
-                (*attr_arr2)[index][0].pair = lines->line[i].difftype;
+                attr_arr1[index][0].pair = lines->line[i].difftype;
+                attr_arr2[index][0].pair = lines->line[i].difftype;
                 break;
             case 2:
-                for(j=0;j<strlen(lines->line[i].left);j++)
-                    (*attr_arr1)[index][j].pair = lines->line[i].r1[j];
-                (*attr_arr1)[index][0].pair = 2; //这一步主要是后续属性判断时可以区分行差异
-                for(j=0;j<strlen(lines->line[i].right);j++)
-                    (*attr_arr2)[index][j].pair = lines->line[i].r2[j];
-                (*attr_arr2)[index][0].pair = 2;
+                for(j=0;j<base->win[0].w;j++)
+                    attr_arr1[index][j].pair = 0; //清空行颜色
+                attr_arr1[index][0].pair = 2; //这一步主要是后续属性判断时可以区分行差异
+                linelen = strlen(lines->line[i].left);
+                linelen = linelen < base->win[0].w - 5 ? linelen : base->win[0].w - 5;
+                for(j=0;j<linelen;j++)
+                    attr_arr1[index][j+5].pair = lines->line[i].r1[j];
+
+                for(j=0;j<base->win[1].w;j++)
+                    attr_arr2[index][j].pair = 0; //清空行颜色
+                attr_arr2[index][0].pair = 2; //这一步主要是后续属性判断时可以区分行差异
+                linelen = strlen(lines->line[i].right);
+                linelen = linelen < base->win[1].w - 5 ? linelen : base->win[1].w - 5;
+                for(j=0;j<linelen;j++)
+                    attr_arr2[index][j+5].pair = lines->line[i].r2[j];
                 break;
         }
         if(lines->line[i].left)
-            mvwprintw(view->base.win[0].window,index,0,"%-4d %s",i,lines->line[i].left);
+            mvwprintw(base->win[0].window,index,0,"%-4d %s",i,lines->line[i].left);
         if(lines->line[i].right)
-            mvwprintw(view->base.win[1].window,index,0,"%-4d %s",i,lines->line[i].right);
+            mvwprintw(base->win[1].window,index,0,"%-4d %s",i,lines->line[i].right);
         index++;
     }
 }
@@ -274,7 +284,7 @@ void* show_view(void * arg)
                     move_char(&view.fileview,ch);
                     break;
                 case 'n':
-                case 'p':
+                case 'N':
                     tab_diff(&view.fileview,ch);
                     break;
                 case '\n':

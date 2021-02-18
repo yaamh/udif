@@ -151,7 +151,7 @@ void tab_diff(fileview_s *view,int type)
         }
 
     }
-    else if(type == 'p')
+    else if(type == 'N')
     {
         for(i=diffnum-1;i>=0;i--)
         {

@@ -11,6 +11,11 @@ void diff_line(const char* s1,const char* s2,char *r1,char *r2)
     int s2len = strlen(s2);
     int i,j;
 
+    memset(r1,1,s1len);
+    memset(r2,1,s2len);
+    if(!s1len || !s2len)
+        return;
+
     int reg[s1len + 1][s2len + 1];
 
     for(i=0;i<=s2len;i++)
@@ -27,8 +32,6 @@ void diff_line(const char* s1,const char* s2,char *r1,char *r2)
                 reg[j][i] = MIN(reg[j-1][i],reg[j][i-1],reg[j-1][i-1]) + 1;
         }
     }
-    memset(r1,0,s1len);
-    memset(r2,0,s2len);
     j = s1len;
     i = s2len;
 
