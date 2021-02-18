@@ -7,6 +7,11 @@
 int main(int argc,char *argv[])
 {
 #if 1
+    if(argc != 2)
+    {
+        printf("usag:\n./udiff dir1 dir2\n");
+        return 0;
+    }
     pthread_t pid;
     pthread_create(&pid,NULL,show_view,(void*)argv);
 
