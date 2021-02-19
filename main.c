@@ -7,7 +7,7 @@
 int main(int argc,char *argv[])
 {
 #if 1
-    if(argc != 2)
+    if(argc != 3)
     {
         printf("usag:\n./udiff dir1 dir2\n");
         return 0;
