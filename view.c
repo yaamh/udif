@@ -119,7 +119,7 @@ void print_linearr(fileview_s *view,vfilenode_s *vfn)
     {
         if(i<base->printstart)
             continue;
-        if(index>base->linemax)
+        if(index>=base->linemax)
             break;
         switch(lines->line[i].difftype)
         {
