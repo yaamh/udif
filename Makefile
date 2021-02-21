@@ -1,10 +1,11 @@
 
-objs=$(patsubst %.c,%.o,$(wildcard *.c))
+objs=$(patsubst %.c,%.o,$(wildcard src/*.c))
+PWD=$(shell pwd)
 
 %.o:%.c
-	$(CC) -g -c $^ -o $@
+	$(CC) -I$(PWD)/include -g -c $^ -o $@
 
 all:$(objs)
-	$(CC) -g $^ -lpthread -lform -lmenu -lpanel -lncursesw -o udiff
-clear:
-	rm *.o udiff
+	$(CC) -g $^ -lpthread -lform -lmenu -lpanel -lncursesw -o udiff 
+clean:
+	rm src/*.o udiff
