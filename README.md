@@ -1,5 +1,6 @@
 # udif
-一个TUI文本比较工具
+一个LINUX下TUI文本比较工具,暂不支持非ASCII字符比对
+需要安装ncursesw
 
 #install
 make后生成udiff文件

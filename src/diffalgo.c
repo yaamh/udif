@@ -5,6 +5,7 @@
 #define MAX(x,y) (x>y?x:y)
 #define MIN(x,y,z) ((x>y?y:x)>z?z:(x>y?y:x))
 
+//比对字符串
 void diff_line(const char* s1,const char* s2,char *r1,char *r2)
 {
     int s1len = strlen(s1);

@@ -197,8 +197,6 @@ void init_dirview(dirview_s *view, char *argv[])
 
 	view->base.viewmax = diff_filelist(view->base.win[0].cwdnode, view->base.win[1].cwdnode, &view->file_list);
 
-	
-
     //刷新窗口
     print_dirlist(view);
 }
